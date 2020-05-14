@@ -21,5 +21,8 @@
         <property name="ignoreUnresolvablePlaceholders" value="true" />
     </bean>
 
+    <!-- 测试Redis连接配置刷新 -->
+    <import resource="classpath*:/META-INF/spring/applicationContext_redis.xml" />
+
 </beans>
 
