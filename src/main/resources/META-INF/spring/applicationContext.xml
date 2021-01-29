@@ -5,17 +5,15 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd">
 
-    <bean class="com.allen.config.utils.SpringContextHolder" lazy-init="false" />
-
-    <context:annotation-config/>
+    <bean class="com.allen.config.utils.SpringContextHolder" />
 
     <context:component-scan base-package="com.allen.config"/>
 
-    <bean class="com.allen.config.ConfigSourcePropertyPlaceholderConfigurer">
-        <property name="configSources">
+    <bean class="com.allen.config.ExtensionPropertySourcesPlaceholderConfigurer">
+        <property name="propertySourceList">
             <list>
-                <bean class="com.allen.config.source.BootFileConfigSourcePropertySource" />
-                <bean class="com.allen.config.source.ApolloConfigSourcePropertySource" />
+                <bean class="com.allen.config.source.BootPropertySource" />
+                <bean class="com.allen.config.source.ApolloPropertySource" />
             </list>
         </property>
         <property name="ignoreUnresolvablePlaceholders" value="true" />

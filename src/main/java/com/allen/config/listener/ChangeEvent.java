@@ -4,13 +4,13 @@ import java.util.Map;
 
 public class ChangeEvent {
 
-    private Map<String, Change> changes;
-
     private String sourceName;
 
-    public ChangeEvent(Map<String, Change> changes, String sourceName) {
-        this.changes = changes;
+    private Map<String, Change> changes;
+
+    public ChangeEvent(String sourceName, Map<String, Change> changes) {
         this.sourceName = sourceName;
+        this.changes = changes;
     }
 
     public Map<String, Change> getChanges() {
@@ -92,5 +92,23 @@ public class ChangeEvent {
 
     public enum ChangeType {
         ADDED, MODIFIED, DELETED
+    }
+
+    public interface EventConverter {
+        ChangeEvent convert();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("ChangeEvent{");
+        sb.append("sourceName:").append(sourceName).append(",[");
+
+        StringBuilder changesBuffer = new StringBuilder();
+        for(String key : changes.keySet()) {
+            changesBuffer.append("{key:").append(key).append(",").append(changes.get(key)).append("},");
+        }
+        sb.append(changesBuffer.length() > 0 ? changesBuffer.subSequence(0, changesBuffer.length() - 1) : "");
+        sb.append("]}");
+        return sb.toString();
     }
 }

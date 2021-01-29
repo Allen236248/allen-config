@@ -38,8 +38,8 @@ public class ConfigTest extends Launcher {
     }
 
     @Test
-    public void test测试profile激活() {
-        org.junit.Assert.assertSame(1, env.getActiveProfiles().length);;
+    public void test测试Profile激活() {
+        org.junit.Assert.assertSame(1, env.getActiveProfiles().length);
     }
 
     @Test
