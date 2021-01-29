@@ -9,6 +9,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.env.StandardEnvironment;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -35,11 +36,19 @@ public class ExtensionPropertyPlaceholderConfigurer extends PropertyPlaceholderC
         if (null == propertySourceList || propertySourceList.isEmpty())
             return properties;
 
-        for (ExtensionPropertiesPropertySource extensionPropertySource : propertySourceList) {
-            properties.putAll(extensionPropertySource.getSource());
+        Collections.sort(propertySourceList);
+        for (ExtensionPropertiesPropertySource propertySource : propertySourceList) {
+            propertySource.loadProperties();
+
+            for (String key : propertySource.getSource().keySet()) {
+                if (properties.containsKey(key))
+                    continue;
+
+                properties.put(key, propertySource.getSource().get(key));
+            }
 
             if (null != environment && environment instanceof StandardEnvironment) {
-                ((StandardEnvironment) environment).getPropertySources().addLast(extensionPropertySource);
+                ((StandardEnvironment) environment).getPropertySources().addLast(propertySource);
             }
         }
         return properties;

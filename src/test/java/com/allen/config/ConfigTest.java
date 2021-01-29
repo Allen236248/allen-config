@@ -28,6 +28,7 @@ public class ConfigTest extends Launcher {
         System.out.println(configLoader.getProperty("dubbo.registry.protocol"));// from apollo file
         System.out.println(configLoader.getProperty("config.server.url"));// from boot file
         System.out.println(configLoader.getProperty("env"));
+        System.out.println(configLoader.getProperty("ZKSTRING"));
     }
 
     @Test

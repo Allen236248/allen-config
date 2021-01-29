@@ -35,53 +35,6 @@ public final class ApolloPropertySource extends MutableExtensionPropertiesProper
         super("APOLLO");
     }
 
-    @Override
-    public final void loadProperties() {
-        Set<NamespacePropertiesHolder> namespacePropertiesHolders = new HashSet<>();
-        namespacePropertiesHolders.add(new NamespacePropertiesHolder(ConfigConsts.NAMESPACE_APPLICATION));
-        namespacePropertiesHolders.addAll(loadRelativeNamespaces());
-
-        loadProperties(namespacePropertiesHolders);
-
-        for (NamespacePropertiesHolder namespacePropertiesHolder : namespacePropertiesHolders) {
-            Properties properties = namespacePropertiesHolder.getProperties();
-            for (Object key : properties.keySet()) {
-                String _key = (String) key;
-                if (this.source.containsKey(_key))
-                    continue;
-
-                this.source.put(_key, properties.getProperty(_key));
-            }
-        }
-    }
-
-    /**
-     * 读取项目配置的Apollo关联的namespace
-     *
-     * @return
-     */
-    protected Set<NamespacePropertiesHolder> loadRelativeNamespaces() {
-        Set<NamespacePropertiesHolder> namespaces = new HashSet<>();
-
-        List<Properties> propertiesList = PropertiesFileReader.readPropertiesList(APOLLO_FILE_LOCATION);
-        if (CollectionUtils.isEmpty(propertiesList))
-            return namespaces;
-
-        for (Properties properties : propertiesList) {
-            String value = properties.getProperty(APP_NAMESPACES);
-            if (!StringUtils.hasText(value))
-                continue;
-
-            String[] namespaceArray = StringUtils.commaDelimitedListToStringArray(value);
-            for (String namespace : namespaceArray) {
-                if (StringUtils.hasText(value)) {
-                    namespaces.add(new NamespacePropertiesHolder(namespace));
-                }
-            }
-        }
-        return namespaces;
-    }
-
     /**
      * 优先级原则：
      * <ul>
@@ -89,13 +42,16 @@ public final class ApolloPropertySource extends MutableExtensionPropertiesProper
      * <li>2、应用关联配置的命名空间按照在apollo.properties配置文件配置的顺序优先级依次降低</li>
      * </ul>
      *
-     * @param namespacePropertiesHolders
      * @return
      */
-    private void loadProperties(Set<NamespacePropertiesHolder> namespacePropertiesHolders) {
+    @Override
+    public final void loadProperties() {
+        List<String> namespaceList = new ArrayList<>();
+        namespaceList.add(ConfigConsts.NAMESPACE_APPLICATION);
+        loadRelativeNamespaces(namespaceList);
+
         boolean isDefaultNamespaceLoaded = false;
-        for (NamespacePropertiesHolder namespacePropertiesHolder : namespacePropertiesHolders) {
-            String namespace = namespacePropertiesHolder.getNamespace();
+        for (String namespace : namespaceList) {
             Config config = null;
             if (ConfigConsts.NAMESPACE_APPLICATION.equals(namespace)) {
                 if (isDefaultNamespaceLoaded) {
@@ -113,17 +69,47 @@ public final class ApolloPropertySource extends MutableExtensionPropertiesProper
                 continue;
             }
 
+            NamespacePropertiesHolder holder = new NamespacePropertiesHolder(namespace);
+
             Set<String> propertyNames = config.getPropertyNames();
             for (String propertyName : propertyNames) {
                 String propertyValue = config.getProperty(propertyName, "");
-                namespacePropertiesHolder.getProperties().put(propertyName, propertyValue);
-            }
+                if (this.source.containsKey(propertyName))
+                    continue;
 
+                this.source.put(propertyName, propertyValue);
+                holder.getProperties().put(propertyName, propertyValue);
+            }
             //按照添加先后设置排序
-            namespacePropertiesHolder.setOrder(namespacePropertiesHolderMap.size());
-            namespacePropertiesHolderMap.put(namespace, namespacePropertiesHolder);
+            holder.setOrder(namespacePropertiesHolderMap.size());
+            namespacePropertiesHolderMap.put(namespace, holder);
+
             // 配置改变监听
             config.addChangeListener(new ApolloConfigChangeListener());
+        }
+    }
+
+    /**
+     * 读取项目配置的Apollo关联的namespace
+     *
+     * @return
+     */
+    protected void loadRelativeNamespaces(List<String> namespaceList) {
+        List<Properties> propertiesList = PropertiesFileReader.readPropertiesList(APOLLO_FILE_LOCATION);
+        if (CollectionUtils.isEmpty(propertiesList))
+            return;
+
+        for (Properties properties : propertiesList) {
+            String value = properties.getProperty(APP_NAMESPACES);
+            if (!StringUtils.hasText(value))
+                continue;
+
+            String[] namespaceArray = StringUtils.commaDelimitedListToStringArray(value);
+            for (String namespace : namespaceArray) {
+                if (StringUtils.hasText(value) && !namespaceList.contains(namespace)) {
+                    namespaceList.add(namespace);
+                }
+            }
         }
     }
 
